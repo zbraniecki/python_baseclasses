@@ -1,0 +1,93 @@
+LazyDict is a subclass of a dict that can additionally store
+items in a form of a stub that is expanded on the first call.
+
+Such class may be useful in all cases where dictionary items
+are expensive to initialize and on average an application
+is using only some of the elements of the dictionary.
+
+Once the item is requested for the first time,
+it is cached for later use.
+
+Example:
+
+    def resolver(self, key, *args, **kwargs):
+        print("resolving")
+        table = kwargs.pop('table', None)
+        return QueryValue(table=table)
+
+    d = LazyDict({'a': 1})
+    d.set_stub('b', resolver, table='items')
+    
+    print(len(d))                    # 2
+    x = d['b']                       # resolving
+    x2 = d['b']                      #
+    print(isinstance(x2, QueryValue) # True
+
+
+
+
+Additionally, LazyDict provides a method to define a resolver that
+will be used for all stubs that do not provide its own.
+
+Example:
+
+    def resolver(self, key, *args, **kwargs):
+        print("resolving")
+        table = kwargs.pop('table', None)
+        return QueryValue(table=table)
+
+    d = LazyDict({'a': 1})
+    d.set_resolver(resolver)
+    d.set_stub('b', None, table='items')
+    d.set_stub('c', None, table='people')
+    
+    print(len(d))                    # 2
+    x = d['b']                       # resolving
+    x2 = d['b']                      #
+    y = d['c']                       # resolving
+    y2 = d['c']                      #
+    print(isinstance(x2, QueryValue) # True
+    print(isinstance(y2, QueryValue) # True
+
+
+LazyDict provides exactly the same methods as dict and behaves very close to it.
+The only difference is that in some cases it resolves its stubs.
+
+In particular:
+
+LazyDict does not resolve any stubs when using:
+ * __init__
+ * __len__
+ * __setitem__
+ * __delitem__
+ * __contains__
+ * __iter__
+ * clear
+ * copy
+ * keys
+ * update
+ * __repr__
+ * set_stub
+ * set_resolver
+
+LazyDict may resolve a single stub associated with the given key when using:
+ * get
+ * popitem
+ * setdefault
+ * pop
+
+LazyDict may resolve all stubs when using:
+ * __cmp__
+ * __eq__
+ * __getitem__
+ * items
+ * values
+ * resolve
+
+== Compatibility ==
+
+LazyDict is compatible with Python 2.6+ and Python 3.0+. Its test suite is
+compatible with Python 2.7+ and Python 3.0+.
+
+Majority of code is based on Python's ABC, UserDict and OrderedDict classes.
+
